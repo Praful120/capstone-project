@@ -1,4 +1,4 @@
-import Brains from '../assets/Brains with words.svg'
+import Brains from '../assets/Brains-with-words.svg'
 
 const HeroSection = () => {
   return (

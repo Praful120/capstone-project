@@ -56,6 +56,7 @@ const handleSummarize = async () => {
     });
 
     const data = await response.json();
+    console.log(data);
     setOutputText(data.summary);
   } catch (error) {
     console.error("Summarization failed:", error);
