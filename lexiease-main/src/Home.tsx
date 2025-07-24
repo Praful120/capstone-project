@@ -24,6 +24,8 @@ const Home = () => {
   }
 
   const [outputText, setOutputText] = useState("");
+  const [audioUrl, setAudioUrl] = useState("");
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -58,11 +60,23 @@ const handleSummarize = async () => {
     const data = await response.json();
     console.log(data);
     setOutputText(data.summary);
+    if (data.audio_url) {
+  setAudioUrl(`http://localhost:8000${data.audio_url}`);
+}
+
   } catch (error) {
     console.error("Summarization failed:", error);
     setOutputText("An error occurred while summarizing.");
   } finally {
     setLoading(false);
+  }
+};
+const handlePlayAudio = () => {
+  if (audioUrl) {
+    const audio = new Audio(audioUrl);
+    audio.play();
+  } else {
+    alert("No audio available. Please summarize first.");
   }
 };
 
@@ -177,20 +191,13 @@ const handleSummarize = async () => {
 
         {activeTab === "Text to Speech" && (
           <div className="flex flex-wrap justify-center items-center gap-6 mt-10">
-            {/* Rewind Button */}
-            <button className="bg-[#ef8354] text-white cursor-pointer rounded-full w-10 h-10 flex items-center justify-center text-lg shadow-md hover:scale-110 transition">
-              <FaUndo />
-            </button>
+            <button
+  onClick={handlePlayAudio}
+  className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition"
+>
+  <FaPlay />
+</button>
 
-            {/* Play Button (center and bigger) */}
-            <button className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition">
-              <FaPlay />
-            </button>
-
-            {/* Forward Button */}
-            <button className="bg-[#ef8354] text-white cursor-pointer rounded-full w-10 h-10 flex items-center justify-center text-lg shadow-md hover:scale-110 transition">
-              <FaRedo />
-            </button>
           </div>
         )}
 

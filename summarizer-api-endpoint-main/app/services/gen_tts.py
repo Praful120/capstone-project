@@ -1,38 +1,13 @@
-import tempfile
-from tempfile import NamedTemporaryFile
-
 from gtts import gTTS
+import tempfile
+import os
 
-
-def text_to_speech(text: str, lang="en", slow=False) -> str:
+def text_to_speech(text, lang="en", slow=False):
     """
-    Convert text to speech using gTTS
-
-    :param text: Text to convert to speech
-    :param lang: Language for TTS 
-    :param slow: Slow speech flag
-    :return: Path to the saved audio file
+    Convert given text to speech using gTTS and return path to saved .mp3 file.
     """
-    try:
-        # Find OS's temp directory
-        temp_dir = tempfile.gettempdir()
-
-        # Create a temp file to store the audio stream
-        temp_file = NamedTemporaryFile(
-            delete=False, suffix=".mp3", dir=temp_dir)
-
-        tts = gTTS(text=text, lang=lang, slow=slow)
-        tts.save(temp_file.name)
-
-        return temp_file.name
-    except Exception as e:
-        raise RuntimeError(f"TTS Conversion failed: {str(e)}")
-
-
-if __name__ == "__main__":
-    input_text = """
-    This is a test of the text-to-speech conversion.
-    The quick brown fox jumps over the lazy dog.
-    """
-    audio_file = text_to_speech(input_text)
-    print(f"Audio file saved at: {audio_file}")
+    tts = gTTS(text=text, lang=lang, slow=slow)
+    temp_dir = tempfile.gettempdir()
+    audio_path = os.path.join(temp_dir, "speech.mp3")
+    tts.save(audio_path)
+    return audio_path

@@ -1,23 +1,17 @@
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-
-from app.api import router
+from app.api import endpoints
 
 app = FastAPI()
 
-# Serve static audio files from /tmp/audio
-app.mount("/audio", StaticFiles(directory="/tmp"), name="audio")
-
-# Enable CORS for frontend on port 5173
+# ✅ CORS middleware setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # or use ["*"] during dev
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register your routes
-app.include_router(router)
+# Include routes
+app.include_router(endpoints.router)
