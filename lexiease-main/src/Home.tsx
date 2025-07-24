@@ -8,10 +8,8 @@ import HeroSection from "./Components/HeroSection";
 import WhatIsItSection from "./Components/WhatIsItSection";
 import HeroAndQuesSection from "./Components/HeroAndQuesSection";
 import FaqSection from "./Components/FaqSection";
-import { FaUndo, FaPlay, FaRedo } from "react-icons/fa";
+import { FaUndo, FaPlay, FaRedo, FaPause } from "react-icons/fa";
 import Navbar from "./Components/Navbar";
-
-
 
 const Home = () => {
   const [inputText, setInputText] = useState("");
@@ -25,62 +23,100 @@ const Home = () => {
 
   const [outputText, setOutputText] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
+    null
+  );
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const text = event.target?.result as string;
-    setInputText(text || "");
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setInputText(text || "");
+    };
+    reader.readAsText(file); //  only .txt
   };
-  reader.readAsText(file); //  only .txt
-};
 
-
-// handle summarized revised
-const handleSummarize = async () => {
-  const wordCount = inputText.trim().split(/\s+/).length;
-  if (wordCount < 30){
+  // handle summarized revised
+  const handleSummarize = async () => {
+    const wordCount = inputText.trim().split(/\s+/).length;
+    if (wordCount < 30) {
       alert("Please enter at least 30 words to summarize.");
       return;
-  } 
-  setLoading(true);
+    }
 
-  try {
-    const response = await fetch("http://localhost:8000/summarize", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text: inputText }),
-    });
+    // Stop and reset any currently playing audio
+    if (audioElement) {
+      audioElement.pause();
+      setAudioElement(null);
+      setIsPlaying(false);
+    }
 
-    const data = await response.json();
-    console.log(data);
-    setOutputText(data.summary);
-    if (data.audio_url) {
-  setAudioUrl(`http://localhost:8000${data.audio_url}`);
-}
+    setLoading(true);
 
-  } catch (error) {
-    console.error("Summarization failed:", error);
-    setOutputText("An error occurred while summarizing.");
-  } finally {
-    setLoading(false);
-  }
-};
-const handlePlayAudio = () => {
-  if (audioUrl) {
-    const audio = new Audio(audioUrl);
-    audio.play();
-  } else {
-    alert("No audio available. Please summarize first.");
-  }
-};
+    try {
+      const response = await fetch("http://localhost:8000/summarize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
 
+      const data = await response.json();
+      console.log(data);
+      setOutputText(data.summary);
+      if (data.audio_url) {
+        setAudioUrl(`http://localhost:8000${data.audio_url}`);
+      }
+    } catch (error) {
+      console.error("Summarization failed:", error);
+      setOutputText("An error occurred while summarizing.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handlePlayAudio = () => {
+    if (!audioUrl) {
+      alert("No audio available. Please summarize first.");
+      return;
+    }
 
+    if (audioElement) {
+      if (isPlaying) {
+        // Pause the audio
+        audioElement.pause();
+        setIsPlaying(false);
+      } else {
+        // Resume the audio
+        audioElement.play();
+        setIsPlaying(true);
+      }
+    } else {
+      // Create new audio element
+      const audio = new Audio(audioUrl);
+
+      // Set up event listeners
+      audio.addEventListener("ended", () => {
+        setIsPlaying(false);
+        setAudioElement(null);
+      });
+
+      audio.addEventListener("error", () => {
+        alert("Error playing audio file.");
+        setIsPlaying(false);
+        setAudioElement(null);
+      });
+
+      // Play the audio
+      audio.play();
+      setAudioElement(audio);
+      setIsPlaying(true);
+    }
+  };
 
   const [fontFamily, setFontFamily] = useState("inter");
   const [fontSize, setFontSize] = useState(16); // in px
@@ -91,7 +127,7 @@ const handlePlayAudio = () => {
   const [customFontColor, setCustomFontColor] = useState("black");
   const [customBgColor, setCustomBgColor] = useState("white");
   const [customDarkMode, setCustomDarkMode] = useState(false);
-    const [loading, setLoading] = useState(false); // for loading animation
+  const [loading, setLoading] = useState(false); // for loading animation
 
   return (
     <div className="w-full font-[Inter] bg-white text-gray-900 ">
@@ -107,7 +143,11 @@ const handlePlayAudio = () => {
           {["Summarize", "Font", "Text to Speech", "Customize"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() =>
+                setActiveTab(
+                  tab as "Summarize" | "Font" | "Text to Speech" | "Customize"
+                )
+              }
               className={`pb-2 ${
                 activeTab === tab
                   ? " px-6 border-b-4 border-[#ef8354] text-[#ef8354]"
@@ -192,12 +232,11 @@ const handlePlayAudio = () => {
         {activeTab === "Text to Speech" && (
           <div className="flex flex-wrap justify-center items-center gap-6 mt-10">
             <button
-  onClick={handlePlayAudio}
-  className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition"
->
-  <FaPlay />
-</button>
-
+              onClick={handlePlayAudio}
+              className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition"
+            >
+              {isPlaying ? <FaPause /> : <FaPlay />}
+            </button>
           </div>
         )}
 
@@ -318,49 +357,48 @@ const handlePlayAudio = () => {
           </button>
         </div> */}
 
-      {/* button with loading animation */}
-      <div className="flex justify-center mt-4">
-  <button
-    onClick={handleSummarize}
-    disabled={loading}
-    className={`bg-[#ef8354] text-white font-bold px-8 py-2 rounded-md shadow-md transition ${
-      loading ? "opacity-50 cursor-not-allowed" : "hover:bg-orange-600"
-    }`}
-  >
-    {loading ? (
-      <div className="flex items-center gap-2">
-        <svg
-          className="animate-spin h-5 w-5 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-          />
-        </svg>
-        Summarizing...
-      </div>
-    ) : (
-      "Summarize"
-    )}
-  </button>
-</div>
-
+        {/* button with loading animation */}
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={handleSummarize}
+            disabled={loading}
+            className={`bg-[#ef8354] text-white font-bold px-8 py-2 rounded-md shadow-md transition ${
+              loading ? "opacity-50 cursor-not-allowed" : "hover:bg-orange-600"
+            }`}
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+                Summarizing...
+              </div>
+            ) : (
+              "Summarize"
+            )}
+          </button>
+        </div>
       </div>
       <HeroSection />
       <WhatIsItSection />
-      <FeaturesSection />
+<FeaturesSection />
       <HowItWorks />
       <BenefitSection />
 

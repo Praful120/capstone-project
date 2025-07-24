@@ -1,13 +1,15 @@
-
 import NavbarSection from "../Components/Navbar";
 import FooterSection from "../Components/FooterSection";
 import FeatureIllustration from "../assets/Freature Ilustration.svg";
 import Ai from "../assets/Artificial Intelligence.svg";
 import FeaturesSection from "../Components/FeaturesSection";
 import Document from "../assets/Document.svg";
+import { useNavigate } from "react-router-dom";
+
 
 const About = () => {
-  
+  const navigate = useNavigate();
+
   return (
     <div className="w-full font-[Inter] bg-white text-gray-900 ">
       <NavbarSection />
@@ -100,7 +102,14 @@ const About = () => {
       </h1>
       
         <div className="flex justify-center">
-        <button className="bg-[#ef8354] contecnt-center text-white font-bold px-8 py-2 rounded-md cursor-pointer shadow-md hover:bg-orange-600 transition">Summarize</button>
+          <button
+  type="button"
+  onClick={() => navigate("/")}
+  className="bg-[#ef8354] contecnt-center text-white font-bold px-8 py-2 rounded-md cursor-pointer shadow-md hover:bg-orange-600 transition"
+>
+  Summarize
+</button>
+
         </div>
 </div>
     

@@ -10,8 +10,13 @@ import GraduationCap from "../assets/Graduation Cap.svg";
 import Shield from "../assets/shield.svg";
 import User from "../assets/user.svg";
 import Charts from "../assets/charts.svg";
+import { useNavigate } from "react-router-dom";
+
 
 const About = () => {
+  const navigate = useNavigate();
+
+  
   const benefits = [
     {
       icon: User,
@@ -48,7 +53,10 @@ const About = () => {
               alt="About us illustration"
               className="w-full max-w-md"
             />
-            <button className="bg-[#ef8354] content-center text-white font-bold px-5 py-3 rounded-md cursor-pointer shadow-md hover:bg-orange-600 transition">
+            <button 
+            type="button"
+  onClick={() => navigate("/")}
+  className="bg-[#ef8354] content-center text-white font-bold px-5 py-3 rounded-md cursor-pointer shadow-md hover:bg-orange-600 transition">
               Get Started
             </button>
           </div>

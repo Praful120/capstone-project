@@ -25,11 +25,6 @@ const faqs = [
       answer:
         "Yes! You can easily adjust fonts, line spacing, background colors, and activate text-to-speech functionality to tailor the experience to your personal needs.",
     },
-    {
-      question: "Q6. What is this tool?",
-      answer:
-        "Our tool is an AI-powered text summarization solution that converts lengthy, complex content into clear, concise summaries—designed especially with dyslexic readers in mind.",
-    },
   ];
   
   const FaqSection = () => {

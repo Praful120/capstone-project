@@ -1,6 +1,13 @@
 import Brains from '../assets/Brains-with-words.svg'
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+    // Function to handle button click
+
+  const handleGetStarted = () => {
+    navigate("/");  // ✅ Redirect to homepage
+  };
   return (
     
     <section className="bg-[#2d3142] text-white py-1 px-6 md:px-25">
@@ -17,7 +24,7 @@ const HeroSection = () => {
           <p className="text-md font-medium md:text-md text-gray-300 mb-4 whitespace-nowrap">
             A dyslexia-friendly text summarization tool that makes reading easier for students, <br></br>educators, and individuals with learning differences.
           </p>
-          <button className="bg-[#ef8354] content-center text-white font-bold px-5 py-3 rounded-md cursor-pointer shadow-md hover:bg-orange-600 transition">Get Started</button>
+          <button onClick={handleGetStarted} className="bg-[#ef8354] content-center text-white font-bold px-5 py-3 rounded-md cursor-pointer shadow-md hover:bg-orange-600 transition">Get Started</button>
         </div>
 
         {/* Image */}
