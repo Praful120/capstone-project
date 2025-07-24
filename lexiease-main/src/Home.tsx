@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import FeaturesSection from "./Components/FeaturesSection";
 import HowItWorks from "./Components/HowItWorksSection";
 import BenefitSection from "./Components/BenefitsSection";
@@ -8,8 +8,10 @@ import HeroSection from "./Components/HeroSection";
 import WhatIsItSection from "./Components/WhatIsItSection";
 import HeroAndQuesSection from "./Components/HeroAndQuesSection";
 import FaqSection from "./Components/FaqSection";
-import { FaUndo, FaPlay, FaRedo, FaPause } from "react-icons/fa";
+import { FaUndo, FaPlay, FaRedo, FaPause, FaStop } from "react-icons/fa";
 import Navbar from "./Components/Navbar";
+import { useState, useEffect } from "react";
+
 
 const Home = () => {
   const [inputText, setInputText] = useState("");
@@ -27,6 +29,7 @@ const Home = () => {
     null
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,6 +51,7 @@ const Home = () => {
       return;
     }
 
+    
     // Stop and reset any currently playing audio
     if (audioElement) {
       audioElement.pause();
@@ -79,6 +83,7 @@ const Home = () => {
       setLoading(false);
     }
   };
+
   const handlePlayAudio = () => {
     if (!audioUrl) {
       alert("No audio available. Please summarize first.");
@@ -117,6 +122,59 @@ const Home = () => {
       setIsPlaying(true);
     }
   };
+
+  const handlePlayPause = () => {
+  if (audioElement) {
+    if (isPlaying) {
+      audioElement.pause();
+      setIsPlaying(false);
+    } else {
+      audioElement.play();
+      setIsPlaying(true);
+    }
+  }
+};
+
+const handleRestart = () => {
+  if (audioElement) {
+    audioElement.currentTime = 0; // Reset to the start
+    audioElement.play();
+    setIsPlaying(true);
+  }
+};
+
+const handleStop = () => {
+  if (audioElement) {
+    audioElement.pause();
+    audioElement.currentTime = 0; // Reset to the start
+    setIsPlaying(false);
+  }
+};
+
+const handleRetry = () => {
+  setHasError(false);  // Reset error state
+  if (audioElement) {
+    audioElement.load(); // Try to reload the audio
+    audioElement.play(); // Play after loading
+    setIsPlaying(true);
+  }
+};
+  useEffect(() => {
+  if (audioUrl) {
+    const audio = new Audio(audioUrl);
+    audio.addEventListener("ended", () => {
+      setIsPlaying(false);
+    });
+
+    audio.addEventListener("error", () => {
+      setHasError(true);
+      setIsPlaying(false);
+    });
+
+    setAudioElement(audio);
+  }
+}, [audioUrl]);
+
 
   const [fontFamily, setFontFamily] = useState("inter");
   const [fontSize, setFontSize] = useState(16); // in px
@@ -230,15 +288,43 @@ const Home = () => {
         )}
 
         {activeTab === "Text to Speech" && (
-          <div className="flex flex-wrap justify-center items-center gap-6 mt-10">
-            <button
-              onClick={handlePlayAudio}
-              className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition"
-            >
-              {isPlaying ? <FaPause /> : <FaPlay />}
-            </button>
-          </div>
-        )}
+  <div className="flex flex-wrap justify-center items-center gap-6 mt-10">
+    {/* Play/Pause Button */}
+    <button
+      onClick={handlePlayPause}
+      className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition"
+    >
+      {isPlaying ? <FaPause /> : <FaPlay />}
+    </button>
+
+    {/* Restart Button */}
+    <button
+      onClick={handleRestart}
+      className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition"
+    >
+      <FaRedo />
+    </button>
+
+    {/* Stop Button */}
+    <button
+      onClick={handleStop}
+      className="bg-[#ef8354] text-white cursor-pointer rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-md hover:scale-110 transition"
+    >
+      <FaStop />
+    </button>
+
+    {/* Error Handling and Retry */}
+    {hasError && (
+      <button
+        onClick={handleRetry}
+        className="bg-red-500 text-white font-bold px-8 py-2 rounded-md cursor-pointer shadow-md hover:bg-red-600 transition"
+      >
+        Retry Audio
+      </button>
+    )}
+  </div>
+)}
+
 
         {activeTab === "Customize" && (
           <div className="flex items-end flex-wrap gap-10 mt-2">
