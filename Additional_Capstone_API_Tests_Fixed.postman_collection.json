@@ -1,0 +1,613 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
+		"name": "Additional Capstone API Test Cases",
+		"description": "Additional test cases to complement existing Text Summarizer API tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "87654321"
+	},
+	"item": [
+		{
+			"name": "Security Tests",
+			"item": [
+				{
+					"name": "SQL Injection Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API handles SQL injection attempts safely\", function () {",
+									"    pm.expect([200, 400, 422]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"No database error in response\", function () {",
+									"    const responseText = pm.response.text();",
+									"    pm.expect(responseText.toLowerCase()).to.not.include('sql');",
+									"    pm.expect(responseText.toLowerCase()).to.not.include('database');",
+									"    pm.expect(responseText.toLowerCase()).to.not.include('mysql');",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(15000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"'; DROP TABLE users; -- This is a SQL injection test to ensure the API handles malicious input safely.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test SQL injection prevention"
+					},
+					"response": []
+				},
+				{
+					"name": "XSS Prevention Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API handles XSS attempts safely\", function () {",
+									"    pm.expect([200, 400, 422]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"Script tags are handled safely\", function () {",
+									"    if (pm.response.code === 200) {",
+									"        const jsonData = pm.response.json();",
+									"        if (jsonData.summary) {",
+									"            pm.expect(jsonData.summary).to.not.include('<script>');",
+									"            pm.expect(jsonData.summary).to.not.include('alert(');",
+									"        }",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Content-Type is application/json\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"<script>alert('XSS')</script>This is a test of XSS prevention in the summarization API. The system should handle script tags and other potentially dangerous HTML content safely.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test XSS prevention capabilities"
+					},
+					"response": []
+				}
+			],
+			"description": "Security-focused test cases"
+		},
+		{
+			"name": "Content Type Tests",
+			"item": [
+				{
+					"name": "Wrong Content-Type Header",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API rejects incorrect content type\", function () {",
+									"    pm.expect([400, 415, 422]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"Error response structure is correct\", function () {",
+									"    if (pm.response.code !== 200) {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('detail');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"text\": \"This should fail due to wrong content type header being set to text/plain instead of application/json\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test rejection of incorrect Content-Type header"
+					},
+					"response": []
+				},
+				{
+					"name": "Missing Content-Type Header",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"API handles missing content type\", function () {",
+									"    pm.expect([200, 400, 415, 422]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"Response structure is valid\", function () {",
+									"    try {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.be.an('object');",
+									"    } catch (e) {",
+									"        pm.expect(pm.response.text()).to.be.a('string');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"text\": \"Testing without content type header to see how the API handles this scenario\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test handling of missing Content-Type header"
+					},
+					"response": []
+				}
+			],
+			"description": "Content-Type header validation tests"
+		},
+		{
+			"name": "HTTP Method Tests",
+			"item": [
+				{
+					"name": "GET Request to Summarize Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"GET method not allowed for summarize\", function () {",
+									"    pm.expect(pm.response.code).to.eql(405);",
+									"});",
+									"",
+									"pm.test(\"Allow header contains POST\", function () {",
+									"    const allowHeader = pm.response.headers.get('Allow');",
+									"    if (allowHeader) {",
+									"        pm.expect(allowHeader.toLowerCase()).to.include('post');",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Error response format\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test that GET method is not allowed for summarize endpoint"
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Request to Summarize Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PUT method not allowed for summarize\", function () {",
+									"    pm.expect(pm.response.code).to.eql(405);",
+									"});",
+									"",
+									"pm.test(\"Method not allowed response\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"text\": \"Testing PUT method which should not be allowed\"}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test that PUT method is not allowed for summarize endpoint"
+					},
+					"response": []
+				}
+			],
+			"description": "HTTP method validation tests"
+		},
+		{
+			"name": "Edge Case Tests",
+			"item": [
+				{
+					"name": "Unicode and Special Characters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Unicode characters handled correctly\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('summary');",
+									"    pm.expect(jsonData.summary.length).to.be.greaterThan(0);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(30000);",
+									"});",
+									"",
+									"pm.test(\"Content-Type is application/json\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Hello world! This text contains emojis and special characters: áéíóú, çñü, and mathematical symbols. Testing unicode support in summarization.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test handling of Unicode and special characters"
+					},
+					"response": []
+				},
+				{
+					"name": "Very Short Text",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Short text handled appropriately\", function () {",
+									"    pm.expect([200, 400]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Summary exists for short text\", function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('summary');",
+									"        pm.expect(jsonData.summary).to.be.a('string');",
+									"    });",
+									"}",
+									"",
+									"pm.test(\"Response time is fast for short text\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(10000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Hi.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test handling of very short text input"
+					},
+					"response": []
+				}
+			],
+			"description": "Edge case and boundary testing"
+		},
+		{
+			"name": "TTS Edge Cases",
+			"item": [
+				{
+					"name": "TTS with Unsupported Language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Unsupported language handled\", function () {",
+									"    pm.expect([200, 400, 422]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 400) {",
+									"    pm.test(\"Error message for unsupported language\", function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData.detail.toLowerCase()).to.include('language');",
+									"    });",
+									"}",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Audio response for unsupported language\", function () {",
+									"        pm.expect(pm.response.headers.get('Content-Type')).to.include('audio/mpeg');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?text=Test text with invalid language code&lang=xyz&slow=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tts"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "Test text with invalid language code"
+								},
+								{
+									"key": "lang",
+									"value": "xyz"
+								},
+								{
+									"key": "slow",
+									"value": "false"
+								}
+							]
+						},
+						"description": "Test TTS with unsupported language code"
+					},
+					"response": []
+				}
+			],
+			"description": "Text-to-Speech edge case testing"
+		},
+		{
+			"name": "API Health Tests",
+			"item": [
+				{
+					"name": "Root Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Root endpoint responds\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Root endpoint has valid response\", function () {",
+									"        pm.expect(pm.response.text().length).to.be.greaterThan(0);",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Test root endpoint availability"
+					},
+					"response": []
+				},
+				{
+					"name": "Non-existent Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Non-existent endpoint returns 404\", function () {",
+									"    pm.expect(pm.response.code).to.eql(404);",
+									"});",
+									"",
+									"pm.test(\"404 error response structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});",
+									"",
+									"pm.test(\"Fast response for 404\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/nonexistent-endpoint-12345",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"nonexistent-endpoint-12345"
+							]
+						},
+						"description": "Test 404 handling for non-existent endpoints"
+					},
+					"response": []
+				}
+			],
+			"description": "API health and availability tests"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"console.log('Running additional test against: ' + pm.environment.get('base_url'));",
+					"console.log('Test execution time: ' + new Date().toISOString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test('Response should not contain server errors', function () {",
+					"    pm.expect(pm.response.code).to.not.be.oneOf([500, 502, 503, 504]);",
+					"});",
+					"",
+					"pm.test('Response should have reasonable response time', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(120000);",
+					"});",
+					"",
+					"console.log('Response code: ' + pm.response.code);",
+					"console.log('Response time: ' + pm.response.responseTime + 'ms');"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		}
+	]
+}

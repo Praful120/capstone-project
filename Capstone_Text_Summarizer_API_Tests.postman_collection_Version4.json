@@ -1,0 +1,386 @@
+{
+	"info": {
+		"_postman_id": "f4a7b8c9-1d2e-3f4g-5h6i-7j8k9l0m1n2o",
+		"name": "Capstone Text Summarizer API Tests",
+		"description": "Comprehensive test collection for the Text Summarizer API with TTS functionality and edge cases",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Text Summarization Edge Cases",
+			"item": [
+				{
+					"name": "Non-ASCII Character Handling",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"Response contains summary and audio_url\", function () {",
+									"  var jsonData = pm.response.json();",
+									"  pm.expect(jsonData).to.have.property('summary');",
+									"  pm.expect(jsonData).to.have.property('audio_url');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"text\": \"Hello 🙂 café नमस्ते\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [ "{{base_url}}" ],
+							"path": [ "summarize" ]
+						},
+						"description": "Test summarization with non-ASCII characters (emojis, accents, non-Latin scripts)"
+					},
+					"response": []
+				},
+				{
+					"name": "Exceeding Model's Max Input Length",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"Summary present\", function () {",
+									"  var jsonData = pm.response.json();",
+									"  pm.expect(jsonData).to.have.property('summary');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"text\": \"" + "Lorem ipsum dolor sit amet, ".repeat(200) + "\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [ "{{base_url}}" ],
+							"path": [ "summarize" ]
+						},
+						"description": "Test summarization with input longer than BART's max tokens"
+					},
+					"response": []
+				},
+				{
+					"name": "Input with Only Stop Words/Nonsense",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"Summary present\", function () {",
+									"  var jsonData = pm.response.json();",
+									"  pm.expect(jsonData).to.have.property('summary');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"text\": \"the is of and a the is of and a\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [ "{{base_url}}" ],
+							"path": [ "summarize" ]
+						},
+						"description": "Test summarization with only stop words / nonsense"
+					},
+					"response": []
+				},
+				{
+					"name": "Incorrect HTTP Method",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 405\", function () { pm.response.to.have.status(405); });"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [ "{{base_url}}" ],
+							"path": [ "summarize" ]
+						},
+						"description": "Test GET method is not allowed for /summarize"
+					},
+					"response": []
+				},
+				{
+					"name": "Audio File Concurrency",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Run this test in parallel with at least one other identical request.",
+									"pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"Summary and audio_url present\", function () {",
+									"  var jsonData = pm.response.json();",
+									"  pm.expect(jsonData).to.have.property('summary');",
+									"  pm.expect(jsonData).to.have.property('audio_url');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"text\": \"Concurrency test input\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [ "{{base_url}}" ],
+							"path": [ "summarize" ]
+						},
+						"description": "Test concurrency for identical audio file requests"
+					},
+					"response": []
+				},
+				{
+					"name": "Directory Traversal Security Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404 or 400\", function () {",
+									"  pm.expect([404, 400]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/audio/../../../../etc/hosts",
+							"host": [ "{{base_url}}" ],
+							"path": [ "audio", "..", "..", "..", "..", "etc", "hosts" ]
+						},
+						"description": "Test prevention of directory traversal"
+					},
+					"response": []
+				},
+				{
+					"name": "TTS with Punctuation and Numbers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"Summary and audio_url present\", function () {",
+									"  var jsonData = pm.response.json();",
+									"  pm.expect(jsonData).to.have.property('summary');",
+									"  pm.expect(jsonData).to.have.property('audio_url');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"text\": \"The year is 2025. Is this a question?\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [ "{{base_url}}" ],
+							"path": [ "summarize" ]
+						},
+						"description": "Test TTS output for punctuation and numbers"
+					},
+					"response": []
+				},
+				{
+					"name": "Request Header Validation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 415 or 422\", function () {",
+									"  pm.expect([415, 422]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "text/plain" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"text\": \"Valid text\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [ "{{base_url}}" ],
+							"path": [ "summarize" ]
+						},
+						"description": "Test incorrect Content-Type header"
+					},
+					"response": []
+				}
+			],
+			"description": "Edge case tests for /summarize endpoint"
+		},
+		{
+			"name": "Text-to-Speech Edge Cases",
+			"item": [
+				{
+					"name": "Empty text Parameter in TTS Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+									"pm.test(\"Error message is correct\", function () {",
+									"  var jsonData = pm.response.json();",
+									"  pm.expect(jsonData.detail).to.include(\"Text parameter cannot be empty\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?text=",
+							"host": [ "{{base_url}}" ],
+							"path": [ "tts" ],
+							"query": [ { "key": "text", "value": "" } ]
+						},
+						"description": "Test /tts error with empty text param"
+					},
+					"response": []
+				},
+				{
+					"name": "Unsupported Language in TTS",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 500\", function () { pm.response.to.have.status(500); });",
+									"pm.test(\"Error message mentions unsupported language\", function () {",
+									"  var jsonData = pm.response.json();",
+									"  pm.expect(jsonData.detail).to.include(\"language\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?text=hello&lang=xx",
+							"host": [ "{{base_url}}" ],
+							"path": [ "tts" ],
+							"query": [
+								{ "key": "text", "value": "hello" },
+								{ "key": "lang", "value": "xx" }
+							]
+						},
+						"description": "Test /tts unsupported language"
+					},
+					"response": []
+				}
+			],
+			"description": "Edge case tests for /tts endpoint"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('Running test against: ' + pm.environment.get('base_url'));"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test('Response should not contain server errors', function () {",
+					"    pm.expect(pm.response.code).to.not.be.oneOf([500, 502, 503, 504]);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "test_audio_filename",
+			"value": "sample_audio.mp3",
+			"type": "string"
+		}
+	]
+}

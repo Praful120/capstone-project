@@ -1,0 +1,913 @@
+{
+	"info": {
+		"_postman_id": "f4a7b8c9-1d2e-3f4g-5h6i-7j8k9l0m1n2o",
+		"name": "Capstone Text Summarizer API Tests",
+		"description": "Comprehensive test collection for the Text Summarizer API with TTS functionality",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Text Summarization Tests",
+			"item": [
+				{
+					"name": "Valid Text Summarization",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has summary field\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('summary');",
+									"    pm.expect(jsonData.summary).to.be.a('string');",
+									"    pm.expect(jsonData.summary.length).to.be.greaterThan(0);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(30000);",
+									"});",
+									"",
+									"pm.test(\"Content-Type is application/json\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+									"});",
+									"",
+									"// Store audio filename if present for later tests",
+									"const jsonData = pm.response.json();",
+									"if (jsonData.audio_url) {",
+									"    const audioFilename = jsonData.audio_url.split('/').pop();",
+									"    pm.environment.set(\"test_audio_filename\", audioFilename);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Artificial intelligence (AI) is intelligence demonstrated by machines, in contrast to the natural intelligence displayed by humans and animals. Leading AI textbooks define the field as the study of intelligent agents: any device that perceives its environment and takes actions that maximize its chance of successfully achieving its goals. Colloquially, the term artificial intelligence is often used to describe machines that mimic cognitive functions that humans associate with the human mind, such as learning and problem solving. As machines become increasingly capable, tasks considered to require intelligence are often removed from the definition of AI, a phenomenon known as the AI effect.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test text summarization with valid input text"
+					},
+					"response": []
+				},
+				{
+					"name": "Empty Text Input",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.eql(\"Input text cannot be empty.\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test error handling for empty text input"
+					},
+					"response": []
+				},
+				{
+					"name": "Whitespace Only Text",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.eql(\"Input text cannot be empty.\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"   \\n\\t   \"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test error handling for whitespace-only text"
+					},
+					"response": []
+				},
+				{
+					"name": "Large Text Input",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has summary field\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('summary');",
+									"    pm.expect(jsonData.summary).to.be.a('string');",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable for large text\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(60000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test summarization with large text input"
+					},
+					"response": []
+				},
+				{
+					"name": "Missing Request Body",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 422\", function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test(\"Validation error response structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"    pm.expect(jsonData.detail).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test validation error for missing request body"
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid JSON Format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 422\", function () {",
+									"    pm.response.to.have.status(422);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "invalid json{"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test error handling for invalid JSON format"
+					},
+					"response": []
+				}
+			],
+			"description": "Test cases for the /summarize endpoint"
+		},
+		{
+			"name": "Audio File Retrieval Tests",
+			"item": [
+				{
+					"name": "Get Valid Audio File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 404\", function () {",
+									"    pm.expect([200, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Audio file response headers\", function () {",
+									"        pm.expect(pm.response.headers.get('Content-Type')).to.include('audio/mpeg');",
+									"        pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/audio/{{test_audio_filename}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"audio",
+								"{{test_audio_filename}}"
+							]
+						},
+						"description": "Test retrieving a valid audio file (uses filename from previous summarize test)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-existent Audio File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error message is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.eql(\"Audio file not found\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/audio/nonexistent_file.mp3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"audio",
+								"nonexistent_file.mp3"
+							]
+						},
+						"description": "Test error handling for non-existent audio file"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invalid File Type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.eql(\"Invalid file type\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/audio/sample.txt",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"audio",
+								"sample.txt"
+							]
+						},
+						"description": "Test error handling for invalid file type"
+					},
+					"response": []
+				}
+			],
+			"description": "Test cases for the /audio/{filename} endpoint"
+		},
+		{
+			"name": "Text-to-Speech Tests",
+			"item": [
+				{
+					"name": "Valid TTS Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Audio response headers\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('audio/mpeg');",
+									"    pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment');",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(15000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?text=Hello world, this is a test of the text to speech functionality&lang=en&slow=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tts"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "Hello world, this is a test of the text to speech functionality"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								},
+								{
+									"key": "slow",
+									"value": "false"
+								}
+							]
+						},
+						"description": "Test TTS with valid parameters"
+					},
+					"response": []
+				},
+				{
+					"name": "TTS with Spanish Language",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Audio response headers\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('audio/mpeg');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?text=Hola mundo, esta es una prueba&lang=es&slow=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tts"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "Hola mundo, esta es una prueba"
+								},
+								{
+									"key": "lang",
+									"value": "es"
+								},
+								{
+									"key": "slow",
+									"value": "false"
+								}
+							]
+						},
+						"description": "Test TTS with Spanish language"
+					},
+					"response": []
+				},
+				{
+					"name": "TTS with Slow Speech",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Audio response headers\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('audio/mpeg');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?text=This is slow speech for testing&lang=en&slow=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tts"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": "This is slow speech for testing"
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								},
+								{
+									"key": "slow",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Test TTS with slow speech enabled"
+					},
+					"response": []
+				},
+				{
+					"name": "TTS Empty Text",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.eql(\"Text parameter cannot be empty\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?text=&lang=en",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tts"
+							],
+							"query": [
+								{
+									"key": "text",
+									"value": ""
+								},
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Test error handling for empty text parameter"
+					},
+					"response": []
+				},
+				{
+					"name": "TTS Missing Text Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 422\", function () {",
+									"    pm.response.to.have.status(422);",
+									"});",
+									"",
+									"pm.test(\"Validation error response\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tts?lang=en",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tts"
+							],
+							"query": [
+								{
+									"key": "lang",
+									"value": "en"
+								}
+							]
+						},
+						"description": "Test validation error for missing text parameter"
+					},
+					"response": []
+				}
+			],
+			"description": "Test cases for the /tts endpoint"
+		},
+		{
+			"name": "Unimplemented Endpoint Tests",
+			"item": [
+				{
+					"name": "Test Unimplemented Audio Endpoint",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 501\", function () {",
+									"    pm.response.to.have.status(501);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates not implemented\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.include(\"TODO\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/audio?filename=test.mp3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"audio"
+							],
+							"query": [
+								{
+									"key": "filename",
+									"value": "test.mp3"
+								}
+							]
+						},
+						"description": "Test the unimplemented /audio endpoint"
+					},
+					"response": []
+				}
+			],
+			"description": "Test cases for unimplemented endpoints"
+		},
+		{
+			"name": "CORS and Headers Tests",
+			"item": [
+				{
+					"name": "CORS Preflight Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"CORS headers are present\", function () {",
+									"    pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.exist;",
+									"    pm.expect(pm.response.headers.get('Access-Control-Allow-Methods')).to.exist;",
+									"    pm.expect(pm.response.headers.get('Access-Control-Allow-Headers')).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "OPTIONS",
+						"header": [
+							{
+								"key": "Origin",
+								"value": "http://localhost:5173"
+							},
+							{
+								"key": "Access-Control-Request-Method",
+								"value": "POST"
+							},
+							{
+								"key": "Access-Control-Request-Headers",
+								"value": "Content-Type"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test CORS preflight request"
+					},
+					"response": []
+				},
+				{
+					"name": "Cross-Origin Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"CORS origin header is set\", function () {",
+									"    pm.expect(pm.response.headers.get('Access-Control-Allow-Origin')).to.exist;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Origin",
+								"value": "http://localhost:5173"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Short test for CORS functionality.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test cross-origin request handling"
+					},
+					"response": []
+				}
+			],
+			"description": "Test cases for CORS functionality"
+		},
+		{
+			"name": "Performance and Load Tests",
+			"item": [
+				{
+					"name": "Concurrent Summarization Requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time under load\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(45000);",
+									"});",
+									"",
+									"pm.test(\"Response has summary\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('summary');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Machine learning is a method of data analysis that automates analytical model building. It is a branch of artificial intelligence based on the idea that systems can learn from data, identify patterns and make decisions with minimal human intervention. Because of new computing technologies, machine learning today is not like machine learning of the past. It was born from pattern recognition and the theory that computers can learn without being programmed to perform specific tasks; researchers interested in artificial intelligence wanted to see if computers could learn from data.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/summarize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"summarize"
+							]
+						},
+						"description": "Test performance under concurrent load (run this multiple times simultaneously)"
+					},
+					"response": []
+				}
+			],
+			"description": "Performance and load testing scenarios"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('Running test against: ' + pm.environment.get('base_url'));"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test('Response should not contain server errors', function () {",
+					"    pm.expect(pm.response.code).to.not.be.oneOf([500, 502, 503, 504]);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "test_audio_filename",
+			"value": "sample_audio.mp3",
+			"type": "string"
+		}
+	]
+}

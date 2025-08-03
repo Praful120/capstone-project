@@ -75,6 +75,7 @@ const Home = () => {
       setOutputText(data.summary);
       if (data.audio_url) {
         setAudioUrl(`http://localhost:8000${data.audio_url}`);
+        console.log(`Audio URL:`, data.audio_url);
       }
     } catch (error) {
       console.error("Summarization failed:", error);
